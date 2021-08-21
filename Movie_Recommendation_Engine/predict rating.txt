@@ -1,0 +1,127 @@
+//output: User A's predicted rating for a selected movie
+    //input: User A's ID (String) and name of movie (String)
+    private double PredictRating(String UserA_ID, String MovieFile) throws FileNotFoundException {
+        //Predicted rating:
+        //Top SUM = A and j's pearson's coefficient*(rating j gave to movie m - j's mean) + A and l's pearson coefficient*(rating l gave to movie m - j's mean)+...
+        //Bottom SUM = magnitude of (A and j's pearson's coefficient + A and l's pearson's coefficient... +...)
+        //Predicted rating = (Top SUM/Bottom SUM) + A's mean
+
+
+        //required values:
+        //the Pearson's coefficient of top 5
+        //the rating of top 5 for movie m
+        //mean of each top 5
+        //mean of user A
+
+        //this used to be the start of code for this function
+        //ArrayList<Pearsons> KNN = new ArrayList<>();
+        //KNN = NeighboursPearson(UserA_ID, MovieFile); //array list of top 5 neighbours
+
+        //TODO: for RMSE, check if predicted rating already exists in the arraylist
+        //UserA
+        /*
+        double userAmean = 0;
+        int userAindex=0;
+        userAindex = FindUserIndex(UserA_ID);
+        User UserA = OldUsers.get(userAindex);
+        userAmean = UserA.mean;
+        int movieindex = 0;
+
+        //I need this to get the actual rating
+        for(int r = 0; r < UserA.MovieRatings.size(); r++) {
+            if (UserA.MovieRatings.get(r).Movie.equals(MovieFile)) {
+                movieindex = r;
+            }
+        }
+
+         */
+
+        //if predicted rating already exists
+        //if (UserA.MovieRatings.get(movieindex).PredictedRating != -1)
+          //  return UserA.MovieRatings.get(movieindex).PredictedRating;
+
+        System.out.println("testing - why are you not running");
+
+        //this used to be the start of code for this function
+        ArrayList<Pearsons> KNN = new ArrayList<>();
+        KNN = NeighboursPearson(UserA_ID, MovieFile);
+
+        System.out.println("predictrating() movie file: " + MovieFile);
+
+        double predictedrating = 0;
+        double rjm = 0;
+        double mean = 0;
+        int foundindex = 0;
+        double SUM = 0;
+        double BOTTOMSUM = 0;
+
+
+        for(int q = 0; q < KNN.size(); q++) {
+
+            foundindex = FindUserIndex(KNN.get(q).ID); //we got the index of first person of KNN in oldusers array list
+
+            //User UserB = OldUsers.get(foundindex);
+
+            //get User B's rating for Movie M
+            for(int r = 0; r < OldUsers.get(foundindex).MovieRatings.size(); r++) {
+                if (OldUsers.get(foundindex).MovieRatings.get(r).Movie.equals(MovieFile)){
+                    rjm = OldUsers.get(foundindex).MovieRatings.get(r).Rating;
+                    mean = OldUsers.get(foundindex).mean;
+
+                    //test
+                    System.out.println("UserID: " + OldUsers.get(foundindex).ID + ", rjm: " + rjm + ", mean: " + mean);
+                    break;
+                }
+            }
+            SUM = SUM + KNN.get(q).PearsonCo * (rjm - mean);
+        }
+
+        //test
+        for (int k=0; k <KNN.size(); k++){
+            System.out.println("Pearson's coefficient in order: " + KNN.get(k).PearsonCo);
+        }
+
+
+        //Denominator
+        for (int j=0; j<KNN.size();j++){
+            BOTTOMSUM = BOTTOMSUM + Math.abs(KNN.get(j).PearsonCo);
+        }
+
+        //UserA variables used to be here
+
+        //UserA
+        double userAmean = 0;
+        int userAindex=0;
+        userAindex = FindUserIndex(UserA_ID);
+        User UserA = OldUsers.get(userAindex);
+        userAmean = UserA.mean;
+        int movieindex = 0;
+
+        predictedrating = (SUM / BOTTOMSUM) + userAmean;
+        System.out.println("User A's mean: "+ userAmean);
+
+        //predicted rating
+        System.out.println("User A's predicted rating is: " + predictedrating);
+
+
+        // code for finding index of movie used to be here
+
+        //I need this to get the actual rating
+        for(int r = 0; r < UserA.MovieRatings.size(); r++) {
+            if (UserA.MovieRatings.get(r).Movie.equals(MovieFile)) {
+                movieindex = r;
+            }
+        }
+
+        //System.out.println("User A has watched " + OldUsers.get(userAindex).MovieRatings.size() + "movies.");
+
+        //actual rating
+        System.out.println("User A's actual rating is: " + UserA.MovieRatings.get(movieindex).Rating);
+
+        for(int i = 0; i < 5; i++) {
+            System.out.println("movies user A watched: "+UserA.MovieRatings.get(i).Movie);
+        }
+
+
+        return predictedrating;
+    }
