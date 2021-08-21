@@ -1,0 +1,400 @@
+package Reference;
+
+//purpose is to come up with a rating
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
+
+public class MovieRecommendationEngine {
+
+    ArrayList<User> OldUsers = new ArrayList<User>(); //Keep info of all users in this arraylist
+    private Path Movie;
+
+
+    //function to be created here
+    /*
+    public void ReadFile(String MovieFile) throws FileNotFoundException {
+        File file = new File(MovieFile);
+        Scanner sc = new Scanner (file);
+
+        while (sc.hasNextLine())
+
+            System.out.println(sc.nextLine());
+
+    }
+     */
+
+    //outputs user's rating for a particular movie
+    //input: UserID (cuz we're trying to find them)
+    //input: MovieFile
+    private int ReadFile(String MovieFile, String UserID) throws FileNotFoundException {
+
+        //System.out.println("I am at ReadFile function");
+
+        File file = new File(MovieFile);
+        Scanner sc = new Scanner (file);
+        String userID;
+        String rating;
+        int numrating; //to convert String rating to int, for the return statement
+
+        if (sc.hasNextLine()) //I need to include this because I'm using Delimiter and I want to ignore the first line in each and every file
+            sc.nextLine();
+
+        while (sc.hasNextLine()) {
+            Scanner read = new Scanner(sc.nextLine()); //we are creating a Scanner that reads this new line
+            //starts reading every line in the text file
+            read.useDelimiter(",");
+            userID = read.next();
+            rating = read.next();
+
+
+            if(UserID.equals(userID)) {
+                //return rating (and movie)
+                //however, this means I need to look at the entire line and look at the thing after the delimiter
+                numrating = Integer.parseInt(rating); //converts String to int, for the return statement
+
+                //System.out.println("I found the user");
+                //System.out.println(userID);
+                //System.out.println(rating);
+
+                return numrating;
+            }
+        }
+        //System.out.println("I DIDN'T find the user");
+
+        //at this point, we cannot find the user we're looking for in this movie file.
+        return 0;
+
+
+    }
+
+    //return UserID ArrayList
+    private ArrayList<String> ReturnUserID() throws FileNotFoundException {
+        File file = new File("moviedata/mv_0000001.txt"); //read file
+        Scanner sc = new Scanner (file); //create new Scanner
+
+        ArrayList<String> UserIDArrayList = new ArrayList<>();
+
+        //read the first line. after this function, rest of the text is left. this ignores the "1:"
+        if (sc.hasNextLine()) {
+            sc.nextLine();
+        }
+
+        while (sc.hasNextLine()) { //Scanner is connected directly to the file, and it reads it. Does it have next line?
+
+            Scanner scanner = new Scanner(sc.nextLine()); //we are creating a Scanner that reads this new line
+            scanner.useDelimiter(","); //only reads what comes before ",", everything else is ignored
+            //now scanner is looking at the very first user ID
+
+            //String input = sc.nextLine();
+            UserIDArrayList.add(scanner.next()); //adds new empty bucket, put value inside bucket
+
+        }
+        //System.out.println(UserIDArrayList);
+        return UserIDArrayList;
+    }
+
+/*
+    private void Loop(ArrayList UserIDArrayList) throws FileNotFoundException {
+
+        ArrayList<String> ListofUsers = new ArrayList<>();
+        ListofUsers = ReturnUserID();
+
+        //System.out.println(ListofUsers);
+        //System.out.println(UserIDArrayList);
+
+        for(int w = 0; w < ListofUsers.size(); w++)
+            RecordUserInfo(ListofUsers.get(w));
+
+    }
+
+ */
+
+
+
+    //writing our own function instead of using HashMap
+    //FindUserIndex goes through each element inside Users,
+    // compares UserID with the UserID inside of each element in the class User
+    // and see if the user is there
+    //i.e. see if we already have him in the database/his info is already recorded
+
+
+
+    //Open all movie files to find first person in Array List (and record their rating)
+    //Records rating, movies watched, mean and SD of a user
+    private void RecordUserInfo(ArrayList<String> ListofUsers) throws FileNotFoundException {
+        //there are 2205 movies
+
+        //future use: have a function to check if this person is an OldUser
+
+        //if new user: record their data
+
+        //create a new user, assign its ID value and append to OldUsers
+        //go through each movie file,use function ReadFile,
+        // record rating & store it (condition: if user exists, record movie name too)
+        //check: prints OldUsers array list
+
+
+        //TODO: check with Davyd. changed type from String to User.
+
+        //ArrayList<String> ListofUsers = new ArrayList<>();
+        //ListofUsers = ReturnUserID();
+
+        for(int w = 0; w < ListofUsers.size(); w++) {
+
+            User newUser = new User(); //create a new user. newUser is an object - treat it like a human being.
+            newUser.ID = ListofUsers.get(w); //assign its ID value. newUser is an object with an ID. We want to assign the input value UserID to this object's attribute newUser.ID.
+            OldUsers.add(newUser); //append newUser to the OldUsers arraylist
+
+            ArrayList<String> movies = GetListofAllMovies();
+            int rating;
+            int count = 0; //counts how many ratings exist/total number of movies watched by a user
+
+
+            for (int i = 0; i < movies.size(); i++) {
+                rating = ReadFile("moviedata/" + movies.get(i), newUser.ID); //output: rating
+                //add this rating into the MovieRatings array list
+
+                //name of movie and rating will only be recorded if user is found (result is not return = 0)
+                if (rating != 0) {
+                    //following code should only happen if a value is returned
+                    MovieRating newMovieRating = new MovieRating(); //I need to create a new object of class MovieRating
+                    newMovieRating.Rating = rating; //records rating, but not name of movie
+                    newMovieRating.Movie = movies.get(i); //record name of movie
+                    newUser.MovieRatings.add(newMovieRating); //appends the object (newMovieRating) to arraylist 'MovieRatings'
+                    count++;
+                }
+
+            }
+            //record mean and SD here outside of for loop after all movie/rating data has been collected
+
+            double UserMean;
+            double sum = 0;
+
+            for (int k = 0; k < newUser.MovieRatings.size(); k++)
+                sum = sum + newUser.MovieRatings.get(k).Rating;
+
+            UserMean = sum / count;
+            newUser.mean = UserMean; //assign mean value to the new user
+
+            //now for standard deviation
+            //for each rating, subtract mean from it. then square the result.
+            //find mean of all those squared differences.
+            //take the square root of answer found above.
+
+            double subtractedresult = 0;
+            double squaredresult = 0;
+
+            ArrayList<Double> SquaredDifferences = new ArrayList<>(); //create array list for squared differences
+
+            for (int z = 0; z < newUser.MovieRatings.size(); z++) {
+                subtractedresult = newUser.MovieRatings.get(z).Rating - UserMean;
+                squaredresult = subtractedresult * subtractedresult;
+                SquaredDifferences.add(squaredresult); //appends squared result to array list
+            }
+
+            double SquareDiffMean;
+            double UserSD;
+
+            for (int y = 0; y < SquaredDifferences.size(); y++) {
+                sum = sum + SquaredDifferences.get(y);
+            }
+            SquareDiffMean = sum / SquaredDifferences.size();
+
+            UserSD = Math.sqrt(SquareDiffMean);
+            newUser.SD = UserSD;
+
+            System.out.println(newUser.ID);
+            for(int num = 0; num < newUser.MovieRatings.size(); num++) {
+                System.out.println(newUser.MovieRatings.get(num).Movie);
+                System.out.println(newUser.MovieRatings.get(num).Rating);
+            }
+            System.out.println(count);
+            System.out.println(UserMean);
+            System.out.println(SquaredDifferences);
+            System.out.println(UserSD);
+        }
+
+        //Check results
+
+
+        System.out.print(OldUsers);
+
+
+        //System.out.println("This is what I'm looking for " + OldUsers);
+        System.out.println(ListofUsers);
+    }
+
+
+
+    //output is Array list of ALL movies
+    public ArrayList<String> GetListofAllMovies()  {
+
+        ArrayList<String> AllMovies = new ArrayList<String>();
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get("moviedata"))) {
+            for (Path file : stream) {
+                Movie = file.getFileName();
+                AllMovies.add(Movie.toString());
+            }
+
+        } catch (IOException | DirectoryIteratorException ex) {
+            System.err.println(ex);
+        }
+        //System.out.println(AllMovies);
+
+        return AllMovies;
+    }
+
+/*
+    public void AnalyseArray(ArrayList<Integer> array) {
+        // Do something
+    }
+...
+    ArrayList<Integer> A = new ArrayList<Integer>();
+    AnalyseArray(A);
+
+ */
+
+
+
+
+
+
+
+    /*
+    think through every step
+    believe in yourself
+    don't write lines without thinking
+    don't be impatient
+    most of the read line errors are fixed by clicking
+    tip: copy code, change as little code from the original as possible, then change up the variables.
+    if something is not working, you have to understand what's not working
+    if you have any doubt with the lines, ask Davyd
+     */
+
+
+    //constructor
+    //public Animal();
+    private MovieRecommendationEngine() throws FileNotFoundException {
+        //Animal = breathe();
+        //Animal = eat();
+        //Animal = die();
+
+
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+        MovieRecommendationEngine Engine = new MovieRecommendationEngine(); //as soon as we start the engine, we go through the file and record everyone's ID and ratings
+        //Engine.ReadFile();
+        Engine.ReturnUserID();
+        //Engine.Loop();
+        //Engine.RecordUserInfo(new ArrayList<String>("1488844","1209119")); //throw in variable, can't hardcode
+        ArrayList<String> Users = new ArrayList<String>();
+        Users.add("1488844");
+        Users.add("1209119");
+        Engine.RecordUserInfo(Users);
+
+        //Animal Dog = new Animal();
+        //Animal Dolphin = new Animal();
+    }
+
+
+
+
+//new Dolphin class extends Animal
+    //distinctive properties of Dolphin inside constructor
+    //you can put random values for the variables
+    //or create a specific dolphin
+    //pass arguments in constructor (choose variables you want)
+    //then you can name your Dolphin
+    //what is outside the constructor? Variables such as: tail length, colour of dolphin
+
+
+    //What's Abo's rating  for Zootopia?
+    //find users who watched Zootopia
+    //find Pearson's coefficient between them and Abo
+    //              Loop required. We need to go through all Zootopia watchers and calculate Pearson's coeefficient for each person w/ Abo
+    //Rank Pearson's coefficients and choose K highest
+    //Use final formula to predict Abo's rating
+
+    //Which users watched Zootopia? (index 14)
+    //Open file movie_0014
+    //Record their ID and return the data
+
+    //Find Pearson's coefficient between A and B
+    //To find Pearson's coefficient: Find SD of both, we find Eij
+
+    //TODO: do for one person for now, start small.
+    //Find SD for Zootopia people
+    //Example: there are 10 people, excluding Abo. In the movie file you will see 11 people.
+    //Start with Person A.
+    //Open movie file 1-100.
+    //      Open movie file 1. Find Zootopia Users. Record their rating. Record the movies they've watched.
+    //      Repeat from file 2-100.
+    //Calculate SD.
+    //  Calculate mean
+    //  Plug into formula to find
+    //  Create a map from movie to rating for each user. When you look up the user, you can go to their map. The map has key and value. key = movie, value = rating.
+    //
+    // Store the info in class User for later use
+    //
+
+    //think about using hash map
+    //
+
+
+
+
+
+    /*
+    What's Abo's rating for Zootopia?
+
+    His mean rating
+    How many movies he watched
+
+    We are looking for set K (five closest neighbours) How do we find nearest neighbours?
+    How many other users also watched Zootopia?
+    What rating did they give Zootopia?
+    What's their mean rating? (for all movies they watched)
+
+    We need to find the Pearson coefficient
+
+    missing a step
+
+    After finding pearson coefficient, we have all the info we need
+    we just need to plug it inside the formula
+
+     */
+
+}
+
+/*
+Map<Integer, Integer> userData = new HashMap<>(); //Key is User ID, Value is Movie Rating
+
+
+ */
+
+
+/*
+we need to store all the users -> created arraylist of Users
+we know that we're gonna have to find a specific person in the list of Users -> that's why we created FindUserIndex
+RecordUserInfo -> record user information for a specific movie. It goes through all movie files, records all the information, saves it in Users arraylist.
+
+ */
+
+/*
+New advice on 1/8/21:
+Keep reading this code and I'll learn it, like maybe every 2 hours
+once you FULLY understand aka know why every line is there, you can redo this project
+ */
+
+//TODO: get rid of zeros in output -> don't record movies with 0 rating - done!
+//TODO: Inside of RecordUserInfo, Calculate mean and SD. THen assign mean and SD
+//TODO: Do the same for entire array of users who watched Zootopia
+//TODO: Read this code many times
+
