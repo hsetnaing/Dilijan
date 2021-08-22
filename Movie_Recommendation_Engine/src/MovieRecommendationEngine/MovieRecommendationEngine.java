@@ -135,9 +135,12 @@ public class MovieRecommendationEngine {
         }
 
         //test
+        /*
         for(int num = 0; num < newUsers.size(); num++) {
            // System.out.println("These are the new users: " + newUsers.get(num).ID);
         }
+
+         */
 
 
         //RecordMovieRating records ratings
@@ -145,7 +148,7 @@ public class MovieRecommendationEngine {
 
         for (int i = 0; i < movies.size(); i++) {
 
-            RecordMovieRating("moviedata/" + movies.get(i), newUsers);
+            RecordMovieRating("moviedata_smaller/" + movies.get(i), newUsers);
 
         }
 
@@ -270,7 +273,7 @@ public class MovieRecommendationEngine {
 
         ArrayList<String> AllMovies = new ArrayList<String>();
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get("moviedata"))) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get("moviedata_smaller"))) {
             for (Path file : stream) {
                 Movie = file.getFileName();
                 AllMovies.add(Movie.toString());
@@ -395,6 +398,7 @@ public class MovieRecommendationEngine {
         //System.out.println("This is User B's mean: " + B.mean);
 
         //test
+        /*
         if(B.ID.equals("1283204")){
             //System.out.println("SUM: " +SUM);
             //System.out.println("Eij: "+Eij);
@@ -402,6 +406,8 @@ public class MovieRecommendationEngine {
             //System.out.println("SD: "+A.SD);
             //System.out.println(CommonMovies.size());
         }
+
+         */
 
         //System.out.println("This is Pearson's coefficient: " + Pearsons);
 
@@ -468,49 +474,46 @@ public class MovieRecommendationEngine {
         }
 
         //this prints everyone in their list, incl. their ID and P's coefficient
+        /*
         for(int j=0; j<PearsonNeighboursList.size(); j++) {
             //System.out.println("ID: "+PearsonNeighboursList.get(j).ID + ", Pearson's coefficient: " + PearsonNeighboursList.get(j).PearsonCo);
         }
+
+         */
 
         //create new object of that type
         //assign value to attribute of object
         //append object to arraylist of type object
 
+        /*
         //remove Pearson's Coefficients that are out of range and are NaN
         for(int j =0; j<PearsonNeighboursList.size();j++){
             if(PearsonNeighboursList.get(j).PearsonCo > 1 || PearsonNeighboursList.get(j).PearsonCo < -1 || Double.isNaN(PearsonNeighboursList.get(j).PearsonCo)){
                 PearsonNeighboursList.remove(j);
             }
         }
-        //System.out.println("this should be size of array after removing undesirables: "+PearsonNeighboursList.size());
 
-        //Print final PearsonNeighboursList (unsorted)
-        for(int jaguar=0; jaguar<PearsonNeighboursList.size(); jaguar++) {
-           //System.out.println("unsorted list: ID: "+PearsonNeighboursList.get(jaguar).ID + ", Pearson's coefficient: " + PearsonNeighboursList.get(jaguar).PearsonCo);
+         */
+
+        //remove Pearsons that are not a number
+        for(int j =0; j < PearsonNeighboursList.size(); j++){
+            if(Double.isNaN(PearsonNeighboursList.get(j).PearsonCo)){
+                PearsonNeighboursList.remove(j);
+                j = j - 1;
+            }
         }
 
-       // System.out.println("this should be size of sorted array after removing undesirables: "+PearsonNeighboursList.size());
 
         //sort in descending order
         Collections.sort(PearsonNeighboursList, Collections.reverseOrder());
 
-        //print sorted list
-        for(int jelly =0; jelly<PearsonNeighboursList.size(); jelly++){
-           // System.out.println("Sorted list: "+PearsonNeighboursList.get(jelly).ID + ", Pearson's coefficient: "+PearsonNeighboursList.get(jelly).PearsonCo);
-        }
-
-        //print top 5
-        for(int jupiter =0; jupiter<5; jupiter++){
-           // System.out.println("top 5: "+PearsonNeighboursList.get(jupiter).ID + ", Pearson's coefficient: "+PearsonNeighboursList.get(jupiter).PearsonCo);
-
-        }
 
         //new array list with just top 5
         ArrayList<Pearsons> KNN = new ArrayList<>();
 
         //append the objects to the new array list
-        for(int jupiter =0; jupiter<5; jupiter++){
-            KNN.add(PearsonNeighboursList.get(jupiter));
+        for(int i = 0; i < 5; i++){
+            KNN.add(PearsonNeighboursList.get(i));
         }
 
         //System.out.println(KNN.size());
@@ -563,8 +566,10 @@ public class MovieRecommendationEngine {
             SUM = SUM + KNN.get(q).PearsonCo * (rjm - mean);
         }
 
+
+
         //test
-        System.out.println("SUM: "+ SUM);
+        //System.out.println("SUM: "+ SUM);
 
 
 
@@ -589,7 +594,7 @@ public class MovieRecommendationEngine {
         userAmean = UserA.mean;
         int movieindex = 0;
 
-        predictedrating = (SUM / BOTTOMSUM) + userAmean;
+        predictedrating = (SUM / BOTTOMSUM) + userAmean; //this is why predicted rating is same as user mean (print statements)
 
         System.out.println("User A's mean: "+ userAmean);
 
@@ -599,15 +604,21 @@ public class MovieRecommendationEngine {
 
         // code for finding index of movie used to be here
 
-        //I need this to get the actual rating
-        for(int r = 0; r < UserA.MovieRatings.size(); r++) {
-            if (UserA.MovieRatings.get(r).Movie.equals(MovieFile)) {
-                //movieindex = r;
+        System.out.println("we know that the movie file is: " + MovieFile);
+
+        //I need this to get the actual rating (for testing purposes)
+        for(int i = 0; i < UserA.MovieRatings.size(); i++) {
+
+            if (UserA.MovieRatings.get(i).Movie.equals(MovieFile)) {
+                movieindex = i;
                 System.out.println("moviefile: " + MovieFile);
-                System.out.println("movie: " + UserA.MovieRatings.get(r).Movie);
-                System.out.println("index"+ r);
+                System.out.println("movie: " + UserA.MovieRatings.get(i).Movie);
+                System.out.println("index"+ i);
             }
         }
+
+        System.out.println("size of movie array: "+ UserA.MovieRatings.size());
+
 
         //System.out.println("User A has watched " + OldUsers.get(userAindex).MovieRatings.size() + "movies.");
 
@@ -627,7 +638,28 @@ public class MovieRecommendationEngine {
     }
 
 
-    //RMSE user/movie
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public static void main(String[] args) throws Exception {
 
@@ -637,7 +669,7 @@ public class MovieRecommendationEngine {
 
         //uncomment the following code and
         //hardcode the chosen user and movie here ONLY if I want to know predicted rating
-        Engine.PredictRating("1283204", "moviedata_smaller/mv_0000227.txt");
+        Engine.PredictRating("1283204", "moviedata_smaller/mv_0000489.txt");
 
         //for RMSE
         //Engine.RMSEUser("1283204");
@@ -651,7 +683,7 @@ public class MovieRecommendationEngine {
         NumberFormat formatter = new DecimalFormat("#0.00000");
         System.out.print("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
 
-
+        //TODO: make no. of neighbours a variable (k instead of 5)
     }
 }
 
