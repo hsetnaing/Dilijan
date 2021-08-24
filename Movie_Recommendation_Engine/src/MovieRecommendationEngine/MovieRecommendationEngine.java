@@ -389,7 +389,13 @@ public class MovieRecommendationEngine {
         Eij = SUM / CommonMovies.size();
 	     //System.out.println("Common Movies: "+CommonMovies.size());
         //System.out.println("Eij: "+Eij);
-        Pearsons = Eij / (A.SD * B.SD);
+
+        if(A.SD * B.SD == 0){
+            Pearsons = 0;
+        } else {
+            Pearsons = Eij / (A.SD * B.SD);
+        }
+
         //System.out.println("This is User A's ID: " + A.ID);
         //System.out.println("This is User B's ID: " + B.ID);
         //System.out.println("This is User A's SD: " + A.SD);
@@ -450,8 +456,14 @@ public class MovieRecommendationEngine {
         User UserB;
         User UserA;
 
+        if(ChosenUser.equals("573975")) {
+            System.out.println("TESTING: We've arrived at 573975.");
+        }
+
+
         ArrayList<User> Neighbours = new ArrayList<>();
         Neighbours = FindNeighbours(ChosenUser, MovieFile); //this is my array list of neighbours of type Object <User> //RecordUserInfo called in FindNeighbours
+        System.out.println("Size of Neighbours: " + Neighbours.size());
 
         //test
         //System.out.println("inside neighbours pearson: "+Neighbours.size());
@@ -594,7 +606,13 @@ public class MovieRecommendationEngine {
         userAmean = UserA.mean;
         int movieindex = 0;
 
-        predictedrating = (SUM / BOTTOMSUM) + userAmean; //this is why predicted rating is same as user mean (print statements)
+        if(BOTTOMSUM == 0) {
+
+            predictedrating = userAmean;
+
+        } else {
+            predictedrating = (SUM / BOTTOMSUM) + userAmean; //this is why predicted rating is same as user mean (print statements)
+        }
 
         System.out.println("User A's mean: "+ userAmean);
 
@@ -628,38 +646,137 @@ public class MovieRecommendationEngine {
         System.out.println("ID: "+UserA.ID + ", movie index: "+movieindex + ", Movie name: " + UserA.MovieRatings.get(movieindex).Movie + ", actual rating: "+UserA.MovieRatings.get(movieindex).Rating);
 
 
-
+        /*
         for(int i = 0; i < 5; i++) {
-            System.out.println("movies user A watched: "+UserA.MovieRatings.get(i).Movie);
+           System.out.println("movies user A watched: "+UserA.MovieRatings.get(i).Movie);
         }
+
+         */
 
 
         return predictedrating;
     }
 
+    private void RMSEUser(String UserA_ID) throws FileNotFoundException {
+        //values I need:
+        //number of movies a user has watched (size of MovieRatings array)
+        //actual rating for each movie
+        //predicted rating for each movie
 
-    
+        //important: we have to run predict rating first!
+        //there will be no such thing as an OldUsers array list UNTIL we run PredictRating();
 
+        //I need to have a working OldUsers array list...
+        //I have called on this function just so I have all the info that I need
+        //but I won't use it. Sole purpose is to have a working OldUsers array list with all the info
+        //PredictRating(UserA_ID, "moviedata/mv_0000002.txt"); //it's ok to hardcode movie here bc when you try to find a particular user, you will already know what movie file they are in
+        //this works perfectly. Now we just need to find the rating for all other movies
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        ArrayList<String> a_list = new ArrayList<>();
+        a_list.add(UserA_ID);
+        RecordUserInfo(a_list);
 
 
+        int index;
+        index = FindUserIndex(UserA_ID);
+        User UserA = OldUsers.get(index);
+        int numberofmovies = UserA.MovieRatings.size();   //this line (and for-loop) is why I need lines 655-657, I needed to know which movies to go through
+        double predictedrating;
+        String MovieFile;
 
+        System.out.println("USERID: "+ UserA.ID);
+
+        for(int i = 0; i < UserA.MovieRatings.size(); i++){
+
+
+            MovieFile = UserA.MovieRatings.get(i).Movie;
+
+            System.out.println("MovieFile: "+MovieFile);
+
+            predictedrating = PredictRating(UserA_ID, MovieFile); //iterate through all movie files
+
+            System.out.println("predicted rating: " + predictedrating);
+
+            UserA.MovieRatings.get(i).PredictedRating = predictedrating; //assign value to attribute of object
+        }
+
+        System.out.println("Size of array: " + UserA.MovieRatings.size());
+
+
+        for(int i = 0; i < UserA.MovieRatings.size();i++){
+            System.out.println("Predicted Rating: " + UserA.MovieRatings.get(i).PredictedRating + ", Actual Rating: " + UserA.MovieRatings.get(i).Rating);
+        }
+
+
+
+        double SUM = 0;
+        double diff = 0;
+        for(int i=0; i <UserA.MovieRatings.size();i++){
+            diff = (UserA.MovieRatings.get(i).PredictedRating - UserA.MovieRatings.get(i).Rating);
+            SUM = SUM + diff*diff;
+        }
+
+        double rmseUser = 0;
+        rmseUser = Math.sqrt(SUM/numberofmovies);
+
+        System.out.println("rmse_user: "+rmseUser);
+
+    }
+
+
+    private void RMSEMovie(String MovieFile) throws FileNotFoundException {
+        //number of ratings -> found using ReturnUserID
+        ArrayList<String> MovieWatchers = new ArrayList<>();
+        MovieWatchers = ReturnUserID(MovieFile); //this is the array list
+        int numberofratings = MovieWatchers.size();
+
+        //ArrayList<String> a_list = new ArrayList<>();
+        //a_list.add(MovieWatchers.get(0)); //just throw the first person in there
+        //RecordUserInfo(a_list);
+
+        //we need people's predicted
+        //and their rating
+
+        double predictedrating;
+        int rating;
+        int foundindex;
+        int movieindex = 0;
+
+        User User;
+
+        double SUM = 0;
+        double diff = 0;
+
+
+
+        for (int i = 0; i < MovieWatchers.size(); i++) {
+
+            // for the first person in the array list
+            // get the predicted rating
+            predictedrating = PredictRating(MovieWatchers.get(i),MovieFile); //returns predicted rating for a particular person
+
+            //then get their actual rating
+            foundindex = FindUserIndex(MovieWatchers.get(i));
+            User = OldUsers.get(foundindex);
+
+            for(int j = 0; j < User.MovieRatings.size(); j++) {
+                if(User.MovieRatings.get(j).equals(MovieFile)) {
+                    movieindex = j;
+                }
+            }
+            rating = User.MovieRatings.get(movieindex).Rating;
+
+            diff = (predictedrating - rating);
+            SUM = SUM + diff*diff;
+
+        }
+
+        double rmseMovie;
+        rmseMovie = Math.sqrt(SUM/numberofratings);
+
+        System.out.println("rmse_movie: " + rmseMovie);
+
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -669,11 +786,11 @@ public class MovieRecommendationEngine {
 
         //uncomment the following code and
         //hardcode the chosen user and movie here ONLY if I want to know predicted rating
-        Engine.PredictRating("1283204", "moviedata_smaller/mv_0000489.txt");
+        //Engine.PredictRating("1283204", "moviedata_smaller/mv_0000489.txt");
 
         //for RMSE
         //Engine.RMSEUser("1283204");
-        //Engine.RMSEMovie("moviedata/mv_0000002.txt");
+        Engine.RMSEMovie("moviedata_smaller/mv_0000002.txt");
 
 
         long endTime   = System.currentTimeMillis();
